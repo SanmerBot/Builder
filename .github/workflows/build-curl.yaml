@@ -135,19 +135,17 @@ jobs:
           ANDROID_NDK_BIN="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${ANDROID_NDK_BUILD}/bin"
           echo "ANDROID_NDK_ROOT=${ANDROID_NDK_ROOT}" >> $GITHUB_ENV
           echo "$ANDROID_NDK_BIN" >> $GITHUB_PATH
-          clang --version
 
       - name: Build OpenSSL
         working-directory: openssl
         run: |
           echo "RUNTIME_PREFIX=/data/data/dev.sanmer.shell" >> $GITHUB_ENV
-          export ANDROID_NDK_ROOT=${{ env.ANDROID_NDK_ROOT }}
 
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
                       --prefix=${GITHUB_WORKSPACE}/local \
-                      --openssldir=${{ env.RUNTIME_PREFIX }}/etc/ssl \
-                      -DMODULESDIR=\\\"${{ env.RUNTIME_PREFIX }}/usr/lib/modules\\\" \
-                      -DENGINESDIR=\\\"${{ env.RUNTIME_PREFIX }}/usr/lib/engines\\\" \
+                      --openssldir=${RUNTIME_PREFIX}/etc/ssl \
+                      -DMODULESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/modules\\\" \
+                      -DENGINESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/engines\\\" \
                       no-docs no-tests \
                       no-engine no-legacy no-deprecated
 
@@ -161,7 +159,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DBUILD_SHARED_LIBS=ON
 
@@ -174,7 +172,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DBUILD_SHARED_LIBS=ON \
                 -DZSTD_BUILD_STATIC=OFF \
@@ -189,7 +187,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DBUILD_SHARED_LIBS=ON \
                 -DBUILD_STATIC_LIBS=OFF \
@@ -207,7 +205,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DENABLE_LIB_ONLY=ON \
                 -DBUILD_SHARED_LIBS=ON \
@@ -222,7 +220,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DENABLE_LIB_ONLY=ON \
                 -DENABLE_SHARED_LIB=ON \
@@ -237,7 +235,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DENABLE_LIB_ONLY=ON \
                 -DENABLE_SHARED_LIB=ON \
@@ -256,7 +254,7 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
-                -DCMAKE_TOOLCHAIN_FILE=${{ env.ANDROID_NDK_ROOT }}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DBUILD_EXAMPLES=OFF \
                 -DBUILD_LIBCURL_DOCS=OFF \
@@ -273,8 +271,8 @@ jobs:
                 -DCURL_USE_LIBPSL=OFF \
                 -DCURL_ZSTD=ON \
                 -DCURL_USE_OPENSSL=ON \
-                -DCURL_CA_BUNDLE=${{ env.RUNTIME_PREFIX }}/etc/ssl/cert.pem \
-                -DCURL_CA_PATH=${{ env.RUNTIME_PREFIX }}/etc/ssl/certs \
+                -DCURL_CA_BUNDLE=${RUNTIME_PREFIX}/etc/ssl/cert.pem \
+                -DCURL_CA_PATH=${RUNTIME_PREFIX}/etc/ssl/certs \
                 -DUSE_NGHTTP2=ON \
                 -DUSE_NGTCP2=ON \
                 -DCMAKE_FIND_ROOT_PATH=${GITHUB_WORKSPACE}/local \
