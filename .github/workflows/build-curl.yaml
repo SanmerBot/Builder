@@ -58,12 +58,6 @@ jobs:
           - target: x86_64
             platform: android-x86_64
     steps:
-      - name: Parse Tags
-        run: |
-          curl_version="${{ inputs.curl_version }}"
-          curl_tag="curl-${curl_version//./_}"
-          echo "CURL_TAG=$curl_tag" >> $GITHUB_ENV
-
       - name: Checkout OpenSSL - ${{ inputs.openssl_version }}
         uses: actions/checkout@v5
         with:
@@ -86,11 +80,10 @@ jobs:
           path: zstd
 
       - name: Checkout LibSSH2 - ${{ inputs.libssh2_version }}
-        uses: actions/checkout@v5
-        with:
-          repository: libssh2/libssh2
-          ref: libssh2-${{ inputs.libssh2_version }}
-          path: libssh2
+        run: |
+          curl -vL -o libssh2.tar.gz https://github.com/libssh2/libssh2/releases/latest/download/libssh2-${{ inputs.libssh2_version }}.tar.gz
+          tar -xzvf libssh2.tar.gz
+          mv libssh2-${{ inputs.libssh2_version }} libssh2
 
       - name: Checkout NgHTTP2 - ${{ inputs.nghttp2_version }}
         uses: actions/checkout@v5
@@ -116,11 +109,10 @@ jobs:
           submodules: true
 
       - name: Checkout cURL - ${{ inputs.curl_version }}
-        uses: actions/checkout@v5
-        with:
-          repository: curl/curl
-          ref: ${{ env.CURL_TAG }}
-          path: curl
+        run: |
+          curl -vL -o curl.tar.gz https://github.com/curl/curl/releases/latest/download/curl-${{ inputs.curl_version }}.tar.gz
+          tar -xzvf curl.tar.gz
+          mv curl-${{ inputs.curl_version }} curl
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
