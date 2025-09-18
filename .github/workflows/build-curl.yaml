@@ -150,7 +150,7 @@ jobs:
                       no-engine no-legacy no-deprecated
 
           make -j$(nproc)
-          make install-sw
+          make install_sw
 
       - name: Build Brotli
         working-directory: brotli
