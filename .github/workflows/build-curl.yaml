@@ -14,7 +14,7 @@ on:
       openssl_version:
         description: "OpenSSL Version"
         required: true
-        default: "3.5.2"
+        default: "3.5.3"
       brotli_version:
         description: "Brotli Version"
         required: true
