@@ -139,7 +139,7 @@ jobs:
       - name: Build OpenSSL
         working-directory: openssl
         run: |
-          export RUNTIME_PREFIX=/data/data/dev.sanmer.shell
+          echo "RUNTIME_PREFIX=/data/data/dev.sanmer.shell" >> $GITHUB_ENV
 
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
                       --prefix=${GITHUB_WORKSPACE}/local \
@@ -271,7 +271,8 @@ jobs:
                 -DCURL_USE_LIBPSL=OFF \
                 -DCURL_ZSTD=ON \
                 -DCURL_USE_OPENSSL=ON \
-                -DCURL_CA_FALLBACK=ON \
+                -DCURL_CA_BUNDLE=${RUNTIME_PREFIX}/etc/ssl/cert.pem \
+                -DCURL_CA_PATH=${RUNTIME_PREFIX}/etc/ssl/certs \
                 -DUSE_NGHTTP2=ON \
                 -DUSE_NGTCP2=ON \
                 -DCMAKE_FIND_ROOT_PATH=${GITHUB_WORKSPACE}/local \
