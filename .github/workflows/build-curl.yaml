@@ -135,12 +135,15 @@ jobs:
           ANDROID_NDK_BIN="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${ANDROID_NDK_BUILD}/bin"
           echo "ANDROID_NDK_ROOT=${ANDROID_NDK_ROOT}" >> $GITHUB_ENV
           echo "$ANDROID_NDK_BIN" >> $GITHUB_PATH
+          $ANDROID_NDK_BIN/clang --version
+
+      - name: Set up Runtime Prefix
+        run: |
+          echo "RUNTIME_PREFIX=/data/data/dev.sanmer.shell" >> $GITHUB_ENV
 
       - name: Build OpenSSL
         working-directory: openssl
         run: |
-          echo "RUNTIME_PREFIX=/data/data/dev.sanmer.shell" >> $GITHUB_ENV
-
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
                       --prefix=${GITHUB_WORKSPACE}/local \
                       --openssldir=${RUNTIME_PREFIX}/etc/ssl \
