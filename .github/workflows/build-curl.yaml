@@ -11,10 +11,6 @@ on:
         description: "Android SDK Version"
         required: true
         default: "30"
-      runtime_prefix:
-        description: "Runtime Prefix"
-        required: true
-        default: "/data/data/dev.sanmer.shell"
       openssl_version:
         description: "OpenSSL Version"
         required: true
@@ -143,11 +139,13 @@ jobs:
       - name: Build OpenSSL
         working-directory: openssl
         run: |
+          export RUNTIME_PREFIX=/data/data/dev.sanmer.shell
+
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
                       --prefix=${GITHUB_WORKSPACE}/local \
-                      --openssldir=${{ inputs.runtime_prefix }}/etc/ssl \
-                      -DMODULESDIR=\\\"${{ inputs.runtime_prefix }}/usr/lib/modules\\\" \
-                      -DENGINESDIR=\\\"${{ inputs.runtime_prefix }}/usr/lib/engines\\\" \
+                      --openssldir=${RUNTIME_PREFIX}/etc/ssl \
+                      -DMODULESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/modules\\\" \
+                      -DENGINESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/engines\\\" \
                       no-docs no-tests \
                       no-engine no-legacy no-deprecated
 
