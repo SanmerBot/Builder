@@ -145,6 +145,7 @@ jobs:
         working-directory: openssl
         run: |
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
+                      --release \
                       --prefix=${GITHUB_WORKSPACE}/local \
                       --openssldir=${RUNTIME_PREFIX}/etc/ssl \
                       -DMODULESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/modules\\\" \
@@ -159,6 +160,7 @@ jobs:
         working-directory: brotli
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
@@ -172,6 +174,7 @@ jobs:
         working-directory: zstd/build/cmake
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
@@ -187,6 +190,7 @@ jobs:
         working-directory: libssh2
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
@@ -205,6 +209,7 @@ jobs:
         working-directory: nghttp2
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
@@ -220,6 +225,7 @@ jobs:
         working-directory: nghttp3
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
@@ -235,6 +241,7 @@ jobs:
         working-directory: ngtcp2
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
@@ -254,6 +261,7 @@ jobs:
         working-directory: curl
         run: |
           cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
                 -DANDROID_PLATFORM=android-${{ inputs.android_sdk_version }} \
                 -DANDROID_ABI=${{ matrix.target }} \
