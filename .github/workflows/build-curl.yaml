@@ -11,6 +11,10 @@ on:
         description: "Android SDK Version"
         required: true
         default: "30"
+      runtime_prefix:
+        description: "Runtime Prefix"
+        required: true
+        default: "/data/data/dev.sanmer.shell"
       openssl_version:
         description: "OpenSSL Version"
         required: true
@@ -57,13 +61,13 @@ jobs:
             platform: android-arm64
           - target: x86_64
             platform: android-x86_64
-    steps:        
+    steps:
       - name: Parse Tags
         run: |
           curl_version="${{ inputs.curl_version }}"
           curl_tag="curl-${curl_version//./_}"
           echo "CURL_TAG=$curl_tag" >> $GITHUB_ENV
-          
+
       - name: Checkout OpenSSL - ${{ inputs.openssl_version }}
         uses: actions/checkout@v5
         with:
@@ -141,12 +145,14 @@ jobs:
         run: |
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
                       --prefix=${GITHUB_WORKSPACE}/local \
-                      --openssldir=/data/data/dev.sanmer.shell/etc/ssl \
+                      --openssldir=${{ inputs.runtime_prefix }}/etc/ssl \
+                      -DMODULESDIR=\\\"${{ inputs.runtime_prefix }}/usr/lib/modules\\\" \
+                      -DENGINESDIR=\\\"${{ inputs.runtime_prefix }}/usr/lib/engines\\\" \
                       no-docs no-tests \
                       no-engine no-legacy no-deprecated
 
           make -j$(nproc)
-          make install || true # /data is read-only
+          make install-sw
 
       - name: Build Brotli
         working-directory: brotli
