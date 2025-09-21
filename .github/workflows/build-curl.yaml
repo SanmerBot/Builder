@@ -54,7 +54,7 @@ jobs:
 
       - name: Checkout Libidn2 - ${{ env.LIBIDN2_VERSION }}
         run: |
-          curl -L -o libidn2.tar.gz https://mirrors.edge.kernel.org/gnu/libidn/libidn2-${{ env.LIBUNISTRING_VERSION }}.tar.gz
+          curl -L -o libidn2.tar.gz https://mirrors.edge.kernel.org/gnu/libidn/libidn2-${{ env.LIBIDN2_VERSION }}.tar.gz
           tar -xzvf libidn2.tar.gz
           mv libidn2-${{ env.LIBIDN2_VERSION }} libidn2
           rm libidn2.tar.gz
