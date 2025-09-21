@@ -1,6 +1,10 @@
 name: Build cURL
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/build-curl.yaml"
+
   workflow_dispatch:
     inputs:
       android_ndk_version:
@@ -11,38 +15,19 @@ on:
         description: "Android SDK Version"
         required: true
         default: "30"
-      openssl_version:
-        description: "OpenSSL Version"
-        required: true
-        default: "3.5.3"
-      brotli_version:
-        description: "Brotli Version"
-        required: true
-        default: "1.1.0"
-      zstd_version:
-        description: "Zstd Version"
-        required: true
-        default: "1.5.7"
-      libssh2_version:
-        description: "LibSSH2 Version"
-        required: true
-        default: "1.11.1"
-      nghttp2_version:
-        description: "NgHTTP2 Version"
-        required: true
-        default: "1.67.1"
-      nghttp3_version:
-        description: "NgHTTP3 Version"
-        required: true
-        default: "1.11.0"
-      ngtcp2_version:
-        description: "NgTCP2 Version"
-        required: true
-        default: "1.15.1"
-      curl_version:
-        description: "cURL Version"
-        required: true
-        default: "8.16.0"
+
+env:
+  LIBUNISTRING_VERSION: "1.3"
+  LIBIDN2_VERSION: "2.3.8"
+  LIBPSL_VERSION: "0.21.5"
+  OPENSSL_VERSION: "3.5.3"
+  BROTLI_VERSION: "1.1.0"
+  ZSTD_VERSION: "1.5.7"
+  LIBSSH2_VERSION: "1.11.1"
+  NGHTTP2_VERSION: "1.67.1"
+  NGHTTP3_VERSION: "1.11.0"
+  NGTCP2_VERSION: "1.15.1"
+  CURL_VERSION: "8.16.0"
 
 jobs:
   build:
@@ -55,64 +40,93 @@ jobs:
         include:
           - target: arm64-v8a
             platform: android-arm64
+            host: aarch64-linux-android
           - target: x86_64
             platform: android-x86_64
+            host: x86_64-linux-android
     steps:
-      - name: Checkout OpenSSL - ${{ inputs.openssl_version }}
+      - name: Checkout Libunistring - ${{ env.LIBUNISTRING_VERSION }}
+        run: |
+          curl -L -o libunistring.tar.gz https://mirrors.edge.kernel.org/gnu/libunistring/libunistring-${{ env.LIBUNISTRING_VERSION }}.tar.gz
+          tar -xzvf libunistring.tar.gz
+          mv libunistring-${{ env.LIBUNISTRING_VERSION }} libunistring
+          rm libunistring.tar.gz
+
+      - name: Checkout Libidn2 - ${{ env.LIBIDN2_VERSION }}
+        run: |
+          curl -L -o libidn2.tar.gz https://mirrors.edge.kernel.org/gnu/libidn/libidn2-${{ env.LIBUNISTRING_VERSION }}.tar.gz
+          tar -xzvf libidn2.tar.gz
+          mv libidn2-${{ env.LIBIDN2_VERSION }} libidn2
+          rm libidn2.tar.gz
+
+      - name: Checkout Libpsl - ${{ env.LIBPSL_VERSION }}
+        run: |
+          curl -L -o libpsl.tar.gz https://github.com/rockdaboot/libpsl/releases/latest/download/libpsl-${{ env.LIBPSL_VERSION }}.tar.gz
+          tar -xzvf libpsl.tar.gz
+          mv libpsl-${{ env.LIBPSL_VERSION }} libpsl
+          rm libpsl.tar.gz
+
+      - name: Checkout OpenSSL - ${{ env.OPENSSL_VERSION }}
         uses: actions/checkout@v5
         with:
           repository: openssl/openssl
-          ref: openssl-${{ inputs.openssl_version }}
+          ref: openssl-${{ env.OPENSSL_VERSION }}
           path: openssl
+          submodules: true
 
-      - name: Checkout Brotli - ${{ inputs.brotli_version }}
+      - name: Checkout Brotli - ${{ env.BROTLI_VERSION }}
         uses: actions/checkout@v5
         with:
           repository: google/brotli
-          ref: v${{ inputs.brotli_version }}
+          ref: v${{ env.BROTLI_VERSION }}
           path: brotli
+          submodules: true
 
-      - name: Checkout Zstd - ${{ inputs.zstd_version }}
+      - name: Checkout Zstd - ${{ env.ZSTD_VERSION }}
         uses: actions/checkout@v5
         with:
           repository: facebook/zstd
-          ref: v${{ inputs.zstd_version }}
+          ref: v${{ env.ZSTD_VERSION }}
           path: zstd
+          submodules: true
 
-      - name: Checkout LibSSH2 - ${{ inputs.libssh2_version }}
+      - name: Checkout LibSSH2 - ${{ env.LIBSSH2_VERSION }}
         run: |
-          curl -vL -o libssh2.tar.gz https://github.com/libssh2/libssh2/releases/latest/download/libssh2-${{ inputs.libssh2_version }}.tar.gz
+          curl -L -o libssh2.tar.gz https://github.com/libssh2/libssh2/releases/latest/download/libssh2-${{ env.LIBSSH2_VERSION }}.tar.gz
           tar -xzvf libssh2.tar.gz
-          mv libssh2-${{ inputs.libssh2_version }} libssh2
+          mv libssh2-${{ env.LIBSSH2_VERSION }} libssh2
+          rm libssh2.tar.gz
 
-      - name: Checkout NgHTTP2 - ${{ inputs.nghttp2_version }}
+      - name: Checkout NgHTTP2 - ${{ env.NGHTTP2_VERSION }}
         uses: actions/checkout@v5
         with:
           repository: nghttp2/nghttp2
-          ref: v${{ inputs.nghttp2_version }}
+          ref: v${{ env.NGHTTP2_VERSION }}
           path: nghttp2
+          submodules: true
 
-      - name: Checkout NgHTTP3 - ${{ inputs.nghttp3_version }}
+      - name: Checkout NgHTTP3 - ${{ env.NGHTTP3_VERSION }}
         uses: actions/checkout@v5
         with:
           repository: ngtcp2/nghttp3
-          ref: v${{ inputs.nghttp3_version }}
+          ref: v${{ env.NGHTTP3_VERSION }}
           path: nghttp3
           submodules: true
 
-      - name: Checkout NgTCP2 - ${{ inputs.ngtcp2_version }}
+      - name: Checkout NgTCP2 - ${{ env.NGTCP2_VERSION }}
         uses: actions/checkout@v5
         with:
           repository: ngtcp2/ngtcp2
-          ref: v${{ inputs.ngtcp2_version }}
+          ref: v${{ env.NGTCP2_VERSION }}
           path: ngtcp2
           submodules: true
 
-      - name: Checkout cURL - ${{ inputs.curl_version }}
+      - name: Checkout cURL - ${{ env.CURL_VERSION }}
         run: |
-          curl -vL -o curl.tar.gz https://github.com/curl/curl/releases/latest/download/curl-${{ inputs.curl_version }}.tar.gz
+          curl -L -o curl.tar.gz https://github.com/curl/curl/releases/latest/download/curl-${{ env.CURL_VERSION }}.tar.gz
           tar -xzvf curl.tar.gz
-          mv curl-${{ inputs.curl_version }} curl
+          mv curl-${{ env.CURL_VERSION }} curl
+          rm curl.tar.gz
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
@@ -124,18 +138,80 @@ jobs:
           sdkmanager --install "ndk;${{ inputs.android_ndk_version }}"
           ANDROID_NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/${{ inputs.android_ndk_version }}"
           ANDROID_NDK_BUILD=`ls ${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/`
-          ANDROID_NDK_BIN="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${ANDROID_NDK_BUILD}/bin"
+          ANDROID_NDK_PATH="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${ANDROID_NDK_BUILD}/bin"
           echo "ANDROID_NDK_ROOT=${ANDROID_NDK_ROOT}" >> $GITHUB_ENV
-          echo "$ANDROID_NDK_BIN" >> $GITHUB_PATH
-          $ANDROID_NDK_BIN/clang --version
+          echo "ANDROID_NDK_PATH=${ANDROID_NDK_PATH}" >> $GITHUB_ENV
+          $ANDROID_NDK_PATH/${{ matrix.host }}${{ inputs.android_sdk_version }}-clang --version
 
       - name: Set up Runtime Prefix
         run: |
           echo "RUNTIME_PREFIX=/data/data/dev.sanmer.shell" >> $GITHUB_ENV
 
+      - name: Build Libunistring
+        working-directory: libunistring
+        run: |
+          export PATH=${ANDROID_NDK_PATH}:${PATH}
+          export CC=${{ matrix.host }}${{ inputs.android_sdk_version }}-clang
+          export CXX=${{ matrix.host }}${{ inputs.android_sdk_version }}-clang++
+          export AR=llvm-ar
+          export RANLIB=llvm-ranlib
+          export STRIP=llvm-strip
+
+          ./configure --prefix=${GITHUB_WORKSPACE}/local \
+                      --host=${{ matrix.host }} \
+                      --enable-shared=yes \
+                      --enable-static=no
+
+          make -j$(nproc)
+          make install
+
+      - name: Build Libidn2
+        working-directory: libidn2
+        run: |
+          export PATH=${ANDROID_NDK_PATH}:${PATH}
+          export CC=${{ matrix.host }}${{ inputs.android_sdk_version }}-clang
+          export CXX=${{ matrix.host }}${{ inputs.android_sdk_version }}-clang++
+          export AR=llvm-ar
+          export RANLIB=llvm-ranlib
+          export STRIP=llvm-strip
+
+          ./configure --prefix=${GITHUB_WORKSPACE}/local \
+                      --host=${{ matrix.host }} \
+                      --enable-shared=yes \
+                      --enable-static=no \
+                      --with-libunistring-prefix=${GITHUB_WORKSPACE}/local \
+                      --disable-rpath \
+                      --disable-doc
+
+          make -j$(nproc)
+          make install
+
+      - name: Build Libpsl
+        working-directory: libpsl
+        run: |
+          export PATH=${ANDROID_NDK_PATH}:${PATH}
+          export CC=${{ matrix.host }}${{ inputs.android_sdk_version }}-clang
+          export CXX=${{ matrix.host }}${{ inputs.android_sdk_version }}-clang++
+          export AR=llvm-ar
+          export RANLIB=llvm-ranlib
+          export STRIP=llvm-strip
+
+          CFLAGS="-I${GITHUB_WORKSPACE}/local/include" \
+          LIBS="-L${GITHUB_WORKSPACE}/local/lib" \
+          ./configure --prefix=${GITHUB_WORKSPACE}/local \
+                      --host=${{ matrix.host }} \
+                      --enable-shared=yes \
+                      --enable-static=no \
+                      --enable-runtime=libidn2
+
+          make -j$(nproc)
+          make install
+
       - name: Build OpenSSL
         working-directory: openssl
         run: |
+          export PATH=${ANDROID_NDK_PATH}:${PATH}
+
           ./Configure ${{ matrix.platform }} -D__ANDROID_API__=${{ inputs.android_sdk_version }} \
                       --release \
                       --prefix=${GITHUB_WORKSPACE}/local \
@@ -143,7 +219,7 @@ jobs:
                       -DMODULESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/modules\\\" \
                       -DENGINESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/engines\\\" \
                       no-docs no-tests \
-                      no-engine no-legacy no-deprecated
+                      no-engine no-legacy
 
           make -j$(nproc)
           make install_sw
@@ -267,15 +343,18 @@ jobs:
                 -DBUILD_STATIC_LIBS=OFF \
                 -DBUILD_TESTING=OFF \
                 -DCURL_LTO=ON \
+                -DENABLE_CURL_MANUAL=OFF \
+                -DCURL_CA_BUNDLE=${RUNTIME_PREFIX}/etc/ssl/cert.pem \
+                -DCURL_CA_PATH=${RUNTIME_PREFIX}/etc/ssl/certs \
                 -DCURL_ENABLE_SSL=ON \
                 -DCURL_DISABLE_LDAP=ON \
                 -DCURL_DISABLE_NTLM=ON \
                 -DCURL_BROTLI=ON \
-                -DCURL_USE_LIBPSL=OFF \
-                -DCURL_ZSTD=ON \
+                -DCURL_USE_LIBPSL=ON \
+                -DCURL_USE_LIBSSH2=ON \
                 -DCURL_USE_OPENSSL=ON \
-                -DCURL_CA_BUNDLE=${RUNTIME_PREFIX}/etc/ssl/cert.pem \
-                -DCURL_CA_PATH=${RUNTIME_PREFIX}/etc/ssl/certs \
+                -DCURL_ZSTD=ON \
+                -DUSE_LIBIDN2=ON \
                 -DUSE_NGHTTP2=ON \
                 -DUSE_NGTCP2=ON \
                 -DCMAKE_FIND_ROOT_PATH=${GITHUB_WORKSPACE}/local \
@@ -287,5 +366,5 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}-${{ inputs.android_sdk_version }}
+          name: ${{ matrix.target }}
           path: local
