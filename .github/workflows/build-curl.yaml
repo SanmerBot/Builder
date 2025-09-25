@@ -216,8 +216,8 @@ jobs:
                       --release \
                       --prefix=${GITHUB_WORKSPACE}/local \
                       --openssldir=${RUNTIME_PREFIX}/etc/ssl \
-                      -DMODULESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/modules\\\" \
-                      -DENGINESDIR=\\\"${RUNTIME_PREFIX}/usr/lib/engines\\\" \
+                      -DMODULESDIR=\"\\\"${RUNTIME_PREFIX}/usr/lib/modules\\\"\" \
+                      -DENGINESDIR=\"\\\"${RUNTIME_PREFIX}/usr/lib/engines\\\"\" \
                       no-docs no-tests \
                       no-engine no-legacy
 
