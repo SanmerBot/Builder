@@ -363,8 +363,20 @@ jobs:
 
           cmake --build build --target install
 
-      - name: Upload Artifacts
+      - name: Upload Debuggable Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
+          path: local
+
+      - name: Strip Debug Symbols
+        run: |
+          export PATH=${ANDROID_NDK_PATH}:${PATH}
+          ./strip --strip-all local/bin
+          ./strip --strip-all local/lib
+
+      - name: Upload Stripped Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-stripped
           path: local
