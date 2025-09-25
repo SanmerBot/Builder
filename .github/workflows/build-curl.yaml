@@ -372,8 +372,15 @@ jobs:
       - name: Strip Debug Symbols
         run: |
           export PATH=${ANDROID_NDK_PATH}:${PATH}
-          ./strip.sh --strip-all local/bin
-          ./strip.sh --strip-all local/lib
+          function strip() {
+            for f in ${2}/*; do
+              if file "$f" | grep -q "ELF"; then
+                llvm-strip ${1} "$f" && echo "Stripped $f"
+              fi
+            done
+          }
+          strip --strip-all local/bin
+          strip --strip-all local/lib
 
       - name: Upload Stripped Artifacts
         uses: actions/upload-artifact@v4
