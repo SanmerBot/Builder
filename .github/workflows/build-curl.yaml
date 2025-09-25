@@ -372,8 +372,8 @@ jobs:
       - name: Strip Debug Symbols
         run: |
           export PATH=${ANDROID_NDK_PATH}:${PATH}
-          ./strip --strip-all local/bin
-          ./strip --strip-all local/lib
+          ./strip.sh --strip-all local/bin
+          ./strip.sh --strip-all local/lib
 
       - name: Upload Stripped Artifacts
         uses: actions/upload-artifact@v4
