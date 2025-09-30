@@ -21,7 +21,7 @@ on:
         default: "30"
 
 env:
-  ANDROID_RUNTIME_PREFIX: "/data/data/dev.sanmer.shell"
+  ANDROID_RUNTIME_PREFIX: "/data/local/tmp"
   ANDROID_NDK_VERSION: "28.2.13676358"
   ANDROID_SDK_VERSION: "30"
 
