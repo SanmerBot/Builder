@@ -7,6 +7,10 @@ on:
 
   workflow_dispatch:
     inputs:
+      android_runtime_prefix:
+        description: "Android Runtime Prefix"
+        required: true
+        default: "/data/data/dev.sanmer.shell"
       android_ndk_version:
         description: "Android NDK Version"
         required: true
@@ -17,8 +21,10 @@ on:
         default: "30"
 
 env:
+  ANDROID_RUNTIME_PREFIX: "/data/data/dev.sanmer.shell"
   ANDROID_NDK_VERSION: "28.2.13676358"
   ANDROID_SDK_VERSION: "30"
+
   LIBUNISTRING_VERSION: "1.3"
   LIBIDN2_VERSION: "2.3.8"
   LIBPSL_VERSION: "0.21.5"
@@ -157,7 +163,7 @@ jobs:
 
       - name: Set up Runtime Prefix
         run: |
-          echo "RUNTIME_PREFIX=/data/data/dev.sanmer.shell" >> $GITHUB_ENV
+          echo "RUNTIME_PREFIX=${{ inputs.android_runtime_prefix || env.ANDROID_RUNTIME_PREFIX }}" >> $GITHUB_ENV
 
       - name: Build Libunistring
         working-directory: libunistring
