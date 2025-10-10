@@ -14,7 +14,7 @@ on:
       android_ndk_version:
         description: "Android NDK Version"
         required: true
-        default: "28.2.13676358"
+        default: "29.0.14206865"
       android_sdk_version:
         description: "Android SDK Version"
         required: true
@@ -22,7 +22,7 @@ on:
 
 env:
   ANDROID_RUNTIME_PREFIX: "/data/local/tmp"
-  ANDROID_NDK_VERSION: "28.2.13676358"
+  ANDROID_NDK_VERSION: "29.0.14206865"
   ANDROID_SDK_VERSION: "30"
 
   LIBUNISTRING_VERSION: "1.4"
