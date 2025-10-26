@@ -1,0 +1,319 @@
+name: Build cURL with AWS-LC
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/build-curl-aws-lc.yaml"
+
+  workflow_dispatch:
+    inputs:
+      android_runtime_prefix:
+        description: "Android Runtime Prefix"
+        required: true
+        default: "/data/data/dev.sanmer.shell"
+      android_ndk_version:
+        description: "Android NDK Version"
+        required: true
+        default: "29.0.14206865"
+      android_sdk_version:
+        description: "Android SDK Version"
+        required: true
+        default: "31"
+
+env:
+  ANDROID_RUNTIME_PREFIX: "/data/local/tmp"
+  ANDROID_NDK_VERSION: "29.0.14206865"
+  ANDROID_SDK_VERSION: "31"
+
+  AWS_LC_VERSION: "1.62.0"
+  BROTLI_VERSION: "1.1.0"
+  ZSTD_VERSION: "1.5.7"
+  LIBSSH2_VERSION: "1.11.1"
+  NGHTTP2_VERSION: "1.68.0"
+  NGHTTP3_VERSION: "1.12.0"
+  NGTCP2_VERSION: "1.17.0"
+  CURL_VERSION: "8.16.0"
+
+jobs:
+  build:
+    name: Build cURL for ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [arm64-v8a, x86_64]
+        include:
+          - target: arm64-v8a
+            platform: android-arm64
+            host: aarch64-linux-android
+          - target: x86_64
+            platform: android-x86_64
+            host: x86_64-linux-android
+    steps:
+      - name: Checkout AWS-LC - ${{ env.AWS_LC_VERSION }}
+        uses: actions/checkout@v5
+        with:
+          repository: aws/aws-lc
+          ref: v${{ env.AWS_LC_VERSION }}
+          path: aws-lc
+
+      - name: Checkout Brotli - ${{ env.BROTLI_VERSION }}
+        uses: actions/checkout@v5
+        with:
+          repository: google/brotli
+          ref: v${{ env.BROTLI_VERSION }}
+          path: brotli
+
+      - name: Checkout Zstd - ${{ env.ZSTD_VERSION }}
+        uses: actions/checkout@v5
+        with:
+          repository: facebook/zstd
+          ref: v${{ env.ZSTD_VERSION }}
+          path: zstd
+
+      - name: Checkout LibSSH2 - ${{ env.LIBSSH2_VERSION }}
+        run: |
+          curl -L -o libssh2.tar.gz https://github.com/libssh2/libssh2/releases/latest/download/libssh2-${{ env.LIBSSH2_VERSION }}.tar.gz
+          tar -xzvf libssh2.tar.gz
+          mv libssh2-${{ env.LIBSSH2_VERSION }} libssh2
+          rm libssh2.tar.gz
+
+      - name: Checkout NgHTTP2 - ${{ env.NGHTTP2_VERSION }}
+        uses: actions/checkout@v5
+        with:
+          repository: nghttp2/nghttp2
+          ref: v${{ env.NGHTTP2_VERSION }}
+          path: nghttp2
+          submodules: true
+
+      - name: Checkout NgHTTP3 - ${{ env.NGHTTP3_VERSION }}
+        uses: actions/checkout@v5
+        with:
+          repository: ngtcp2/nghttp3
+          ref: v${{ env.NGHTTP3_VERSION }}
+          path: nghttp3
+          submodules: true
+
+      - name: Checkout NgTCP2 - ${{ env.NGTCP2_VERSION }}
+        uses: actions/checkout@v5
+        with:
+          repository: SanmerDev/ngtcp2
+          ref: ${{ env.NGTCP2_VERSION }}
+          path: ngtcp2
+          submodules: true
+
+      - name: Checkout cURL - ${{ env.CURL_VERSION }}
+        run: |
+          curl -L -o curl.tar.gz https://github.com/curl/curl/releases/latest/download/curl-${{ env.CURL_VERSION }}.tar.gz
+          tar -xzvf curl.tar.gz
+          mv curl-${{ env.CURL_VERSION }} curl
+          rm curl.tar.gz
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ""
+
+      - name: Set up Android NDK
+        run: |
+          ANDROID_NDK_VERSION=${{ inputs.android_ndk_version || env.ANDROID_NDK_VERSION }}
+          ANDROID_SDK_VERSION=${{ inputs.android_sdk_version || env.ANDROID_SDK_VERSION }}
+          echo "ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
+          echo "ANDROID_SDK_VERSION=${ANDROID_SDK_VERSION}" >> $GITHUB_ENV
+
+          sdkmanager --install "ndk;${ANDROID_NDK_VERSION}"
+          ANDROID_NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/${ANDROID_NDK_VERSION}"
+          ANDROID_NDK_BUILD=`ls ${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/`
+          ANDROID_NDK_PATH="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${ANDROID_NDK_BUILD}/bin"
+          echo "ANDROID_NDK_ROOT=${ANDROID_NDK_ROOT}" >> $GITHUB_ENV
+          echo "ANDROID_NDK_PATH=${ANDROID_NDK_PATH}" >> $GITHUB_ENV
+
+          ANDROID_NDK_CC=${{ matrix.host }}${ANDROID_SDK_VERSION}-clang
+          ANDROID_NDK_CXX=${{ matrix.host }}${ANDROID_SDK_VERSION}-clang++
+          echo "ANDROID_NDK_CC=${ANDROID_NDK_CC}" >> $GITHUB_ENV
+          echo "ANDROID_NDK_CXX=${ANDROID_NDK_CXX}" >> $GITHUB_ENV
+          ${ANDROID_NDK_PATH}/${ANDROID_NDK_CC} --version
+
+      - name: Set up Runtime Prefix
+        run: |
+          echo "RUNTIME_PREFIX=${{ inputs.android_runtime_prefix || env.ANDROID_RUNTIME_PREFIX }}" >> $GITHUB_ENV
+
+      - name: Build AWS-LC
+        working-directory: aws-lc
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DBUILD_SHARED_LIBS=ON \
+                -DBUILD_TESTING=OFF \
+                -DDISABLE_GO=ON
+
+          cmake --build build --target install
+
+      - name: Build Brotli
+        working-directory: brotli
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DBUILD_SHARED_LIBS=ON
+
+          cmake --build build --target install
+
+      - name: Build Zstd
+        working-directory: zstd/build/cmake
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DBUILD_SHARED_LIBS=ON \
+                -DZSTD_BUILD_STATIC=OFF \
+                -DZSTD_PROGRAMS_LINK_SHARED=ON
+
+          cmake --build build --target install
+
+      - name: Build LibSSH2
+        working-directory: libssh2
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DBUILD_SHARED_LIBS=ON \
+                -DBUILD_STATIC_LIBS=OFF \
+                -DCRYPTO_BACKEND=OpenSSL \
+                -DCMAKE_FIND_ROOT_PATH=${GITHUB_WORKSPACE}/local \
+                -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+                -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY
+
+          cmake --build build --target install
+
+      - name: Build NgHTTP2
+        working-directory: nghttp2
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DENABLE_LIB_ONLY=ON \
+                -DBUILD_SHARED_LIBS=ON \
+                -DBUILD_STATIC_LIBS=OFF
+
+          cmake --build build --target install
+
+      - name: Build NgHTTP3
+        working-directory: nghttp3
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DENABLE_LIB_ONLY=ON \
+                -DENABLE_SHARED_LIB=ON \
+                -DENABLE_STATIC_LIB=OFF
+
+          cmake --build build --target install
+
+      - name: Build NgTCP2
+        working-directory: ngtcp2
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DENABLE_LIB_ONLY=ON \
+                -DENABLE_SHARED_LIB=ON \
+                -DENABLE_STATIC_LIB=OFF \
+                -DENABLE_BORINGSSL=ON \
+                -DCMAKE_FIND_ROOT_PATH=${GITHUB_WORKSPACE}/local \
+                -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+                -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY
+
+          cmake --build build --target install
+
+      - name: Build cURL
+        working-directory: curl
+        run: |
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/local \
+                -DANDROID_PLATFORM=android-${ANDROID_SDK_VERSION} \
+                -DANDROID_ABI=${{ matrix.target }} \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+                -DBUILD_EXAMPLES=OFF \
+                -DBUILD_LIBCURL_DOCS=OFF \
+                -DBUILD_MISC_DOCS=OFF \
+                -DBUILD_SHARED_LIBS=ON \
+                -DBUILD_STATIC_CURL=OFF \
+                -DBUILD_STATIC_LIBS=OFF \
+                -DBUILD_TESTING=OFF \
+                -DCURL_LTO=ON \
+                -DENABLE_CURL_MANUAL=OFF \
+                -DCURL_CA_BUNDLE=${RUNTIME_PREFIX}/etc/ssl/cert.pem \
+                -DCURL_CA_PATH=${RUNTIME_PREFIX}/etc/ssl/certs \
+                -DCURL_ENABLE_SSL=ON \
+                -DCURL_DISABLE_LDAP=ON \
+                -DCURL_DISABLE_NTLM=ON \
+                -DCURL_BROTLI=ON \
+                -DCURL_USE_LIBPSL=OFF \
+                -DCURL_USE_LIBSSH2=ON \
+                -DCURL_USE_OPENSSL=ON \
+                -DCURL_ZSTD=ON \
+                -DUSE_LIBIDN2=OFF \
+                -DUSE_NGHTTP2=ON \
+                -DUSE_NGTCP2=ON \
+                -DCMAKE_FIND_ROOT_PATH=${GITHUB_WORKSPACE}/local \
+                -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+                -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY
+
+          cmake --build build --target install
+
+      - name: Upload Debuggable Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: local
+
+      - name: Strip Debug Symbols
+        run: |
+          export PATH=${ANDROID_NDK_PATH}:${PATH}
+          function strip() {
+            for f in ${2}/*; do
+              if file "$f" | grep -q "ELF"; then
+                llvm-strip ${1} "$f" && echo "Stripped $f"
+              fi
+            done
+          }
+          strip --strip-all local/bin
+          strip --strip-all local/lib
+
+      - name: Upload Stripped Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-stripped
+          path: local
